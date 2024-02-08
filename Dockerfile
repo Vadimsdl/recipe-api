@@ -3,10 +3,11 @@ FROM python:3.9-alpine3.13
 LABEL maintainer="Recipe"
 
 #it tells Python that you don't want to buffer the outbut  the output Pythont will be printed directly to the console
-ENV PYTHONBUFFERED 1
+ENV PYTHONUNBUFFERED 1
 
 #copy our requirements on text file from our local machine to forward (file requirements.txt copy in Docker image)
 COPY ./requirements.txt /tmp/requirements.txt
+COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 #then we copy our directory app 
 COPY ./app /app
 #where by default will be run the commands
@@ -17,13 +18,17 @@ EXPOSE 8000
 #python -m venv /py && \  - create a new virtual envirement for use to store our dependencies 
 #ALL USING FOR VIRTUALL ENVIREMENT
 #adduser - use for create our user for container Docker
-RUN python -m venv /py && \ 
+ARG DEV=false
+RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
     /py/bin/pip install -r /tmp/requirements.txt && \
+    if [ $DEV = "true" ]; \
+        then /py/bin/pip install -r /tmp/requirements.dev.txt ; \
+    fi && \
     rm -rf /tmp && \
-    adduser \ 
-        --disabled-password \ 
-        --o-create-home \ 
+    adduser \
+        --disabled-password \
+        --no-create-home \
         django-user
 
 ENV PATH="/py/bin:$PATH"
